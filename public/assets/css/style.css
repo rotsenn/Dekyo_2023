@@ -1,0 +1,309 @@
+@font-face{
+	src: url('assets/fonts/Lato-Regular.ttf');
+	font-family: lato;
+} /* Importamos el tipo de letra(carpeta Lato) */
+
+* {
+	box-sizing: border-box;
+}/*Con esto sera mas facil trabajar con el ancho(width)*/
+
+body img{
+	width: 100%;
+}/*Le decimos a todo el body que el ancho de las imagenes vayan al 100% */
+
+body {
+	min-width: 350px;
+	font-family: lato, sans-serif, tahoma;
+	font-size: 18px;
+	margin: 0px;
+	padding: 0px;
+}
+
+body a {
+	text-decoration: none;
+
+}
+
+header {
+	display: flex;
+}
+
+/*MENSAJE ALERTA: AlGO NO SALIO BIEN*/
+.alert {
+	background-color: greenyellow;
+	color: green;
+	padding: 10px 20px;
+}
+
+/*MENSAJE ERROR*/
+.error {
+	color: red;
+}
+
+.logo-holder {
+	width: 150px;
+}
+
+.header-div {
+	flex: auto;
+}/*como quiero que vaya el Encabezado*/
+
+.float-end {
+	float: right;
+}
+
+/*Menu Navageción*/
+.main-nav {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin-top: -15px;
+	padding-bottom: 15px;
+}
+
+.nav-item {
+	padding: 10px;
+	text-align: center;
+	min-width: 80px;
+}
+
+.main-title {
+	padding: 10px;
+	display: flex;
+	margin: auto;
+}
+
+header .active {
+	border-bottom: solid 4px red;
+} /*Agregamos borde al Menu(nav-item ) */
+
+.dropdown {
+	position: relative;
+}
+
+.dropdown-list {
+	position: absolute;
+	border: solid thin #ccc;
+	background-color: white;
+	margin-top: 10px;
+} /*Diseño Lista desplegable - Luego usaremos JavaScript para que cuando se de click se despliegue la lista*/
+
+/*Estilo Img slider(Img Grande)*/
+.hero {
+	height: 100%;
+	object-fit: cover;
+}
+
+/*Seccion canciones(cards)*/
+.content {
+	padding: 3px 20px;
+	display: flex; /*pone los elementos en Linea(Horizontal)*/
+	flex-wrap: wrap; /*flex-wrap para que no queden en la misma linea*/
+	justify-content: center;
+}
+
+.music-card img:hover{
+	transform: scale(1.3);
+}/*Efecto para cuando se pase el cursor sobre la Imagen*/
+
+.music-card img{
+	height: 200px;
+	object-fit: cover;/*Ajustar la imgane para que no vea rara*/
+	transition: all .5s cubic-bezier(.68, -0.55, .27, 1.55);
+} /*Vamos a configurar la algura de las card imagenes*/
+
+.music-card {
+	width: 200px;
+	margin: 20px;
+	background-color: #eee;
+} /*Contenedor Tarjeta*/
+
+.card-content {
+	padding: 4px;
+}
+
+.card-title {
+	font-size: 18px;
+}
+
+.card-subtitle {
+	opacity: 0.7;
+}
+
+/*Margenees Iconos*/	
+.bi {
+	margin: 7px;
+	max-width: 25px;
+}
+
+footer a{
+	color: white;
+}
+
+footer {
+	padding: 20px;
+	background-color: #444; /*Color footer*/
+	display: flex;
+	color: white;
+}
+
+.footer-div {
+	flex: 1;
+	padding: 10px;
+}
+
+/*Input Buscador*/
+.form-control {
+	width: 100%;
+	padding: 10px;
+	border: solid thin #ccc;
+}
+
+
+/*Boton Inicio de sesión*/
+.btn {
+	border: none;
+	padding: 10px;
+	cursor: pointer;
+	/* font-size: 0.7em; */
+}
+
+/*color boton inicio de sesion*/
+.bg-blue {
+	background-color: #166fe5;
+	color: white;
+	border-radius: 9px;
+}
+
+.bg-red {
+	background-color: red;
+	color: white;
+	border-radius: 9px;
+}
+
+.bg-purple {
+	background-color: purple;
+	color: white;
+	border-radius: 9px;
+}
+
+.bg-orange {
+	background-color: orange;
+	color: white;
+	/* border-radius: 9px; */
+}
+
+.bg-green {
+	background-color: greenyellow;
+	color: white;
+	border-radius: 9px;
+}
+
+.m-1 {
+	margin: 10px;
+}
+
+.m-2 {
+	margin: 20px;
+}
+
+.mx-1 {
+	margin-left: 10px;
+	margin-right: 10px;
+
+}
+
+.mx-2 {
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+/*Separacion de De Elementos de Elementos(Email, Constraseña  iniciar sesion) 
+en Inicio de sesion*/
+.my-1 {
+	margin-top: 10px;
+	margin-bottom: 10px;
+
+}
+
+.my-2 {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+/*Estilo Admin*/
+.admin-content {
+	padding: 20px;
+	/*background-color: ;*/
+}
+
+/*Contenedor Login*/
+.contenedor-login {
+	margin: 100px;
+	padding: 25px;
+	background-color: #f0f2f5;
+	border-radius: 16px;
+} 
+
+.contenedor-login > h2 {
+	color: #166fe5;
+}
+
+/*Seccion Registro boton*/
+/*.btn-registro {
+	border: none;
+	padding: 10px 20px;
+	cursor: pointer;
+	font-size: 1.0em;
+}*/
+
+
+.form-group {
+	display: flex;
+}
+
+.section-title {
+	margin-left: 20px;
+}
+
+header .socials {
+	flex: auto;
+	text-align: right;
+}
+
+
+/*Ocultar Menu desplegable de
+	- Categorias
+	- Hola, usuario
+*/
+.hide {
+	display: none;
+}
+
+/*Diseño tablas Admin*/
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: #fff;
+}
+
+.table th, .table td {
+	border: solid thin #bbb;
+	padding: 5px 10px;	
+}
+
+/* Color de fondo encabezados(ID, Nombre de usuario. ...) */
+.table th {
+	background-color: #444;
+	color: white;
+}
+
+@media (max-width: 768px){
+	header {
+		flex-direction: column;
+	}
+
+	footer {
+		flex-direction: column;
+	}
+}

@@ -1,0 +1,1187 @@
+1. Comienzo haciendo html
+	pages
+		home.php
+		login.php
+		register.php
+		admin.php
+		404.php
+
+2. Luego configurando funciones de la pagina
+	core
+		config.php
+		functions.php
+		init.php
+
+3. Luego vamos a separar las paginas en secciones
+	creamos una carpeta includes en pages 
+		3.1 pasamos la parte <header> de home.php a header.php
+			pages/inludes/header.php
+
+		/*Necesitmos una forma de incluir ese archivo (header.php) en el 		        home.php
+		<?php require page('includes/header') ?>
+	 	*/
+
+		3.2 pasamos la parte <footer> que estaba en home.php a footer.php
+			pages/inludes/footer.php
+
+		/*Necesitmos una forma de incluir ese archivo (footer.php) en el 			home.php
+		<?php require page('includes/footer') ?>
+	 	*/
+
+4. Enlazamos el elemento anchor que dice login y crear cuenta, del footer.php para que
+   me lleve a la pagina de:
+ 
+	- login
+	- register
+
+	<li><a href="<?=ROOT?>/login">Inicia sesión</a></li>
+    	<li><a href="<?=ROOT?>/register">Crea tu cuenta</a></li>
+
+  Enlazamos el elemento anchor que dice login y crear cuenta, del footer.php para que
+  me lleve a la pagina o seccion de:
+	
+	- inicio
+	- musica
+	- artistas
+	- Acerca de
+	- Contactanos
+	- Mi perfil
+	- Administrador
+	- Cerrar Sesión
+	
+	<a href="<?=ROOT?>">Inicio</a>
+	<a href="<?=ROOT?>/music">Musica</a>
+	<a href="<?=ROOT?>/artists">Artistas</a>
+	<a href="<?=ROOT?>/about">Acerca de</a>
+	<a href="<?=ROOT?>/contact">Contactanos</a>
+	<a href="<?=ROOT?>/profile">Mi Perfil</a>
+	<a href="<?=ROOT?>/admin">Administrador</a>
+	<a href="<?=ROOT?>/logout">Cerrar Sesión</a>
+
+5. Ponemos que la pagina no fue encontrada ya no esta lista o esas secciones
+   aun estan en contruccion en 404.php
+
+	<?php require page('includes/header') ?>
+		<center>
+    			<img src="assets/icons/emoji-frown.svg" alt="Página no 			encontrada" style="width: 100px; ">
+    			<h2>Página no encontrada</h2>
+		</center>
+	<?php require page('includes/footer') ?>
+
+6. divimos la seccion de admin en:
+	- admin-header
+	- admin-footer
+
+  y la seccion de header y footer del admin la pasamos a un archivo llamado:
+	- admin-header.php
+	- admin-footer.php
+
+  y ya desde el archivo admin.php incluimos los otros archivos
+
+	<?php require page('includes/admin-header') ?>
+	<?php require page('includes/admin-footer') ?>
+
+7. Enlazamos el elemento anchor de (admin-header.php) de img logo, Dashboard, 
+   Usuarios, Musica, Categorias, Artistas, Mi perfil, Sitio Web, cerrar Sesion que me 
+   lleve a la pagina de:
+ 	
+	- home
+	- admin
+	- Admin/musica
+	- Admin/categorias
+	- Admin/Artista
+	- profile
+	- home
+	- logout
+
+	<?=ROOT?>
+	<?=ROOT?>/admin
+	<?=ROOT?>/admin/music
+	<?=ROOT?>/admin/artist
+	<?=ROOT?>/admin/categories
+	<?=ROOT?>/admin/artists
+	<?=ROOT?>/profile
+	<?=ROOT?>/
+	<?=ROOT?>/logout
+	
+8. Vamos agregar funciones para agregar un conector para la base de datos en       (functions.php)
+	
+	 /*Creasmos una funcion para la conexion a la base de datos
+        nombre de la funcion -> db_connect()
+    */
+    function db_connect()
+    {
+        $string = DBDRIVER.":hostname=".DBHOST."dbname=".DBNAME;
+        $con = new PDO($string, DBUSER, DBPASS);
+
+        /*
+        vamos a usar PDO para prevenir inyecciones(ataques) SQL
+        DBUSER -> usuario db, DBPASS -> Contraseña db
+        DBDRIVER -> Controlador db
+        */
+        return $con;
+        /*debera retornar la variable $con*/
+    }
+
+9. En la carpeta config.php hacemos otra parte de la conexion
+
+
+	/* 
+        vamos a comprobar si estamos en el servidor local o en el sercidor web
+    */
+
+    if($_SERVER['SERVER_NAME'] == "localhost")
+        //Tenemos una variable global llamada $_SERVER en php. vamos a compara en que  servidor nos encontramos   
+    {
+
+        //Para servidor local
+        define("ROOT", "http://localhost/website_music/public"); //Servior local(localhost)
+
+        define("DBDRIVER", "mysql");
+        define("DBHOST", "localhost");
+        define("DBUSER", "root");
+        define("DBPASS", "");
+        define("DBNAME", "website_music_db");
+
+    } else {
+
+        //Para un servidor
+        define("ROOT", "http://www.mywebsite.com");//Servidor web
+
+        define("DBDRIVER", "mysql");
+        define("DBHOST", "localhost");
+        define("DBUSER", "root");
+        define("DBPASS", "");
+        define("DBNAME", "website_music_db");
+        /*Tenemos dos configuraciones 
+        1. una para el servidor local y 
+        2. otral para el servidor web
+        */
+    }
+
+
+
+
+
+
+
+
+
+//---------------------------------------------
+10. 
+    /* 
+    necesitamos otra función llamada db_query
+    que se usara para ejecutar una consulta
+    */
+    function db_query($query, $data = array())
+    {
+        
+        $con = db_connect();
+
+        $stm = $con->prepare($query);
+        if($stm)
+        {
+            $check = $stm->execute($data);
+            if ($check) {
+                $result = $stm->fetchAll(PDO::FETCH_ASSOC);
+
+                if(is_array($result) && count($result) > 0 ){
+                    return $result;
+                }
+            }
+        }
+
+        return false;
+        //return false; si las cosas no salen bien
+    }
+
+11. Duplicamos la función anterior pero le decimos que nos retorne la variable en
+    la posicion 0
+	
+	function db_query($query, $data = array())
+    {
+        
+        $con = db_connect();
+
+        $stm = $con->prepare($query);
+        if($stm)
+        {
+            $check = $stm->execute($data);
+            if ($check) {
+                $result = $stm->fetchAll(PDO::FETCH_ASSOC);
+
+                if(is_array($result) && count($result) > 0 ){
+                    return $result[0]; //
+                }
+            }
+        }
+
+        return false;
+        //return false; si las cosas no salen bien
+    }
+
+12. /*
+    cuando guardas un perfil o editas un usuario es buena idea tener un mensaje en la parte superior de la sección de Administracción que diga:
+        * el perfil de guardo correctamente *
+    */
+    function message($message = '', $clear = false)
+    {
+        if(!empty($message)){
+            $_SESSION['message'] = $message;
+        } else {
+
+            $msg = $_SESSION['message'];
+            if($clear){
+                unset($_SESSION['message']);
+            }
+            return $msg;
+        }
+        return false;
+    }
+
+
+13. Creamos la base de Datos en http://localhost/phpmyadmin/
+	de nombre website_music_db
+
+14. En el archivo admin.php 
+	vamos a tener unas varibales section, action, id
+	- $section sera iguala a la url[1] que esta almacenado en una matriz
+	  en la posición 1 para que cuando se pulse en dashboard me lleve al dashboard
+		- Creamos un switch 
+		  - Cuando se se click a Dashboard se ejecuta el case 					'dashboard' y se muestra en la intefaz el dashboard
+		  - Cuando se de click a Usuarios se ejecuta el case
+		'users' y se muestra en la interfaz la tablas Usuarioa
+
+15. Creamos Una archivo dashboard.php en la carpeta admin
+
+16. Creamos un archivo users.php en la carpeta admin que sera el que contiene el     codigo y html usuarios
+
+	- Creamos un condicional para cuando el usuario puelse en el boton(<buttom>)
+	  este me lleve a una sub-seccion de usuarios que sera Añadir nuevo(add)
+	
+		- <h3>Usuarios 
+                	<a href="<?=ROOT?>/admin/users/add">
+                    		<button class="float-end btn bg-purple">Agregar 				Nuevo</button>
+                 	</a>
+            	  </h3>
+
+
+	- Ya en la seccion Usurios, se mostrara el elemento <table> con los usuarios
+	
+	<!-- creamos un elemento table para almacenar(mostrar) los usuarios -->
+            <table class="table">
+
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre de usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr> 
+                <tr>
+                    <td>ID</td>
+                    <td>Nombre de usuario</td>
+                    <td>Email</td>
+                    <td>Rol</td>
+                    <td>Fecha</td>
+                    <td>Acción</td>
+                </tr>
+            </table> 
+
+
+17. Creo la seccion sub-seccion(añadir nuevo) que se dio de pues de pulsar el 
+    boton Añadir Nuevo
+
+	-  <?php  if($action == 'add'):?>
+            <!-- crear -> creamos el formulario para crear usuario-->
+            <div style="max-width: 500px; margin: auto">
+                <form method="post">
+                    <h3>Agregar Nuevo Usuario</h3>
+
+                    <input class="form-control my-1" type="text" name="username" 			placeholder="Nombre usuario">
+                    <small class="error">Esto es un error</small>
+                    
+                    <input class="form-control my-1" type="email" name="email" 			placeholder="Email">
+                    <small class="error">Esto es un error</small>
+
+                    <select name="role" class="form-control my-1"> 
+                        <option value="">--Seleccionar rol--</option>
+                        <option value="user">Usuario</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                    <small class="error">Esto es un error</small>
+                    
+                    <input class="form-control my-1" type="password" name="password" 				placeholder="Contraseña">
+                    <small class="error">Ambas Contraseñas deben ser iguales</small>
+                                    
+                    <input class="form-control my-1" type="password" 						name="retype_password" placeholder="Confirmar Contraseña">
+
+                    <button class="btn bg-green">Crear</button>
+                    <a href="<?=ROOT?>/admin/users">
+                        <button type="button" class="float-end btn">Atrás</button>
+                    </a>
+                </form>
+            </div>
+
+18. ahora solo queremos ver el mensaje(<small class="error">Esto es un error</small>)     cuando haya un error
+
+	<?php  if($action == 'add'):?>
+            <!-- crear -> creamos el formulario para crear usuario-->
+            <div style="max-width: 500px; margin: auto">
+                <form method="post">
+                    <h3>Agregar Nuevo Usuario</h3>
+
+                    <input class="form-control my-1" type="text" name="username" 			placeholder="Nombre usuario">
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'username' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['username'])):?>
+                        <small class="error"><?=$errors['username']?></small>
+                    <?php endif;?>
+
+                    <input class="form-control my-1" type="email" name="email" 			placeholder="Email">
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'username' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['email'])):?>
+                        <small class="error"><?=$errors['email']?></small>
+                    <?php endif;?>
+
+                    <select name="role" class="form-control my-1"> 
+                        <option value="">--Seleccionar rol--</option>
+                        <option value="user">Usuario</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'username' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['role'])):?>
+                        <small class="error"><?=$errors['role']?></small>
+                    <?php endif;?>
+
+                    <input class="form-control my-1" type="password" name="password" 			placeholder="Contraseña">
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'username' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['password'])):?>
+                        <small class="error"><?=$errors['password']?>s deben ser 			iguales</small>
+                    <?php endif;?>
+
+                    <input class="form-control my-1" type="password" 			name="retype_password" placeholder="Confirmar Contraseña">
+
+                    <button class="btn bg-green">Crear</button>
+                    <a href="<?=ROOT?>/admin/users">
+                        <button type="button" class="float-end btn">Atrás</button>
+                    </a>
+                </form>
+            </div>
+
+19. Creamos las tablas en la base de datos
+	tabla users
+		Name		Type
+		- id		int
+		- username	varchar(30)
+		- email		varchar(100)
+		- password	varchar(255)
+		- role		varchar(10)
+		- date		datetime
+
+	Luego Agregamos un indice SQL a:
+	
+	- username
+	- email
+	- role
+	- date 
+
+	La sentencia SQL agrega un índice a la columna "username" de la tabla 			"users" en una base de datos. El índice ayuda a mejorar el rendimiento de las 		consultas al permitir una búsqueda y clasificación más rápida de los datos en 		esa columna.
+
+	------
+
+	tabla songs
+		Name		Type
+		- id		int
+		- user_id	int
+		- artist_id	int
+		- image		varchar
+		- file		varchar
+		- category_id	int
+		- date 		datetime
+		- views		int
+
+	tabla categories
+		Name		Type
+		- id		int
+		- category	varchar
+		- disabled	tinyint(1)	
+
+	tabla categories
+		Name		Type
+		- id		int
+		- name		varchar(50)
+		- bio		text
+		- user_id	int
+
+
+20. Exportamos la base de Datos
+	no paramos en el nombre de la base detos(website_music_db)
+	damos click en exportar
+
+21. Ahora vamos a agregar los usuarios 
+
+	Empezamos con:
+
+	<?php 
+    /* queremos saber cuando algo fue publicado por lo que usaremos la variable del 		servidor($_SERVER)*/
+
+    if($_SERVER['REQUEST_METHOD'] == 'POST')
+    {
+        redirect('admin/users')
+    }
+
+	Este código de PHP comprueba si la solicitud HTTP que se está procesando es de 	tipo "POST". Si la solicitud es de tipo "POST", entonces el código ejecuta una 	función llamada "redirect" con el parámetro 'admin/users'.
+
+	Aquí está la explicación detallada de cada línea de código:
+
+	La línea comienza con "if($_SERVER['REQUEST_METHOD'] == 'POST')", lo que 	indica que se está comprobando el método de solicitud HTTP utilizado para 	acceder a la página actual.
+
+	La condición del "if" verifica si la solicitud es de tipo "POST". $_SERVER	['REQUEST_METHOD'] es una variable superglobal que contiene el método de 	solicitud HTTP utilizado para acceder a la página actual (ya sea "GET", 	"POST", "PUT", "DELETE", etc.). En este caso, la condición verifica si el 	método es "POST".
+
+	Si la condición del "if" es verdadera (es decir, si la solicitud es de tipo 	"POST"), entonces se ejecuta la función "redirect". La función "redirect" 	redirige al usuario a otra página. En este caso, se redirige al usuario a la p	ágina "admin/users".
+
+	En resumen, este código verifica si la solicitud actual es de tipo "POST" y, 	si es así, redirige al usuario a la página "admin/users". Esto se puede 	utilizar, por ejemplo, para procesar un formulario enviado por el usuario y 	luego redirigir al usuario a otra página después de que se procesa el 	formulario.
+
+
+22. Luego crearemos una función de redireccion en (function.php) para que me redirija     a la pagina
+
+	#Funcion rediect(de user.php)
+
+    function redirect($page)
+    /*funcion redirec($page) me dira a que pagina a la que se desea redirigir el 	usuario*/
+    {
+        header("Location: ".ROOT."/".$page);
+        die;
+    } 
+	
+	Estas líneas de código definen una función llamada "redirect" que toma un 	argumento "$page" que representa la página a la que se desea redirigir al 	usuario.
+
+	La función utiliza la función "header" de PHP para enviar una respuesta HTTP 	al navegador del usuario, lo que le indica que redirija al usuario a la página 	especificada por el argumento $page. La constante "ROOT" representa la ruta 	base del sitio web y se utiliza para construir la URL de la página de destino.
+
+	Después de enviar la respuesta HTTP de redirección, la función utiliza la 	función "die" para finalizar la ejecución del script de PHP, lo que garantiza 	que el usuario sea redirigido inmediatamente a la nueva página sin que se 	ejecute ningún otro código adicional en la página actual.
+
+23. Hacemos el create para usuario
+
+
+	<!-- 2. Ahora vamos a agregar los usuario -->
+<?php 
+    /* queremos saber cuando algo fue publicado por lo que usaremos la variable del 	servidor($_SERVER)*/
+    if($_SERVER['REQUEST_METHOD'] == 'POST')
+    {
+        //Agregamops una variable por si hay errores
+        $errors = [];
+
+        //validacion de datos ******usuario*****
+               
+        if(empty($_POST['username']))  
+            // si el campo de Nombre de usuario('username') esta vacio me lance un 		error
+        {
+            $errors['username'] = "se requiere un nombre de usuario";
+        } else 
+            //si el Nombre de Usuario esta ingresado
+        if(preg_match("/^[a-zA-Z]+$/", $_POST['username'])){
+            /*estamos buscando con pre_match si hay algun caracter alfabetico en una 		cadena de texto. basicamente estamos buscando si lo que ingreso el 		usuario fueron caracteres alfabeticos de la a-zA-Z de $_POST		['username']*/
+            $errors['username'] = "el nombre de usuario solo puede tener letras sin 		spacios";
+        }
+        
+        //validacion de datos ******email*****
+               
+        if(empty($_POST['email']))  
+        // si el campo de Email('email') esta vacio me lance un error
+        {
+            $errors['email'] = "se requiere un correo electrónico";
+        } else 
+            //si el Email esta ingresado
+        if(filter_var($_POST['email'], FILTER_VALIDATE_EMAIL))
+        /* se ejecuta si el campo de correo electrónico no está vacío, utiliza la 	función "filter_var" con el filtro "FILTER_VALIDATE_EMAIL" para validar si el 	correo electrónico proporcionado por el usuario es válido. Si no es válido, se 	agrega un mensaje de error al array de errores con el índice "email", 	indicando que el correo electrónico no es válido.*/
+        {
+            
+            $errors['email'] = "correo electrónico no válido";
+        }
+
+        //validacion de datos ******password*****
+
+        if(empty($_POST['password']))  
+        // si el campo de password('password') esta vacio me lance un error
+        {
+            $errors['password'] = "se requiere un contraseña";
+        } else 
+            //si el password esta ingresado
+        if($_POST['password'] != $_POST['retype_password'])
+        /*se ejecuta si el campo de contraseña no está vacío, compara la contraseña 	ingresada con la confirmación de contraseña ("retype_password"). Si la 	contraseña ingresada no coincide con la confirmación de contraseña, se agrega 	un mensaje de error al array de errores con el índice "password", indicando 	que la contraseña no coincide.*/
+        {
+            
+            $errors['password'] = "la contraseña no coincide";
+        }
+
+        //validacion de datos ******rol*****
+
+        if(empty($_POST['role']))  
+        // si el campo de role('role') esta vacio me lance un error
+        {
+            $errors['role'] = "se requiere un rol";
+        } 
+
+        if(empty($errors))
+        //si no hay errores
+        {
+            redirect('admin/users');
+            /* este código verifica si la solicitud actual es de tipo "POST" y, si es 		así, redirige(redirect) al usuario a la página "admin/users". Esto se 		puede utilizar, por ejemplo, para procesar un formulario enviado por 		el usuario y luego redirigir al usuario a otra página después de que 		se procesa el formulario */
+
+        }
+                
+       
+    }
+
+    
+
+?>
+
+24. Agregamos (<?=set_value('username')?>) a:	
+
+	- username
+	- email
+	- password
+
+	<input class="form-control my-1" value="<?=set_value('username')?>" 			type="text" name="username" placeholder="Nombre usuario">
+
+	el código <?= set_value('username') ?> se utiliza para imprimir el valor 		predeterminado del campo de formulario username. Si el usuario ya ha enviado 		un valor para este campo, la función set_value() lo devolverá y se imprimirá. 		De lo contrario, se imprimirá un valor predeterminado que se haya establecido 		en algún otro lugar del código.
+
+	La etiqueta <?= ... ?> es una forma abreviada de escribir <?php echo ... ?> en 	PHP. Por lo tanto, <?= set_value('username') ?> es equivalente a <?php echo 		set_value('username'); ?>.
+
+	En resumen, este código PHP se utiliza para imprimir el valor predeterminado 		de un campo de formulario llamado username utilizando la función set_value() 		proporcionada por el framework CodeIgniter.
+		
+
+25. Luego creamos la funcion (set_value) en el archivo functions.php. 
+
+
+	function set_value($key)
+    	{
+        if(!empty($_POST[$key]))
+        {
+            return $_POST[$key];
+        }
+
+        return '';
+    	}
+
+
+	Este código de PHP define una función llamada "set_value" que toma un 			parámetro $key. La función verifica si el valor de $_POST para la clave dada 		en $key no está vacío usando la función "empty". Si el valor no está vacío, 		devuelve el valor de $_POST[$key], de lo contrario devuelve una cadena vacía 		''.
+
+	En resumen, esta función se utiliza para obtener el valor de un campo de 		formulario enviado a través del método POST en PHP. Si el valor no está vacío, 	se devuelve el valor del campo de formulario, de lo contrario, se devuelve una 	cadena vacía.
+
+26. Agregamos al elemento (<select>) > (<option>) <?=set_select('role', '')?>
+
+	<option <?=set_select('role', 'user')?> value="user">Usuario</option>
+     	<option <?=set_select('role', 'admin')?> value="admin">Administrador</option>
+
+	Estas líneas de código PHP utilizan la función "set_select" para imprimir un 		atributo "selected" en un campo de formulario HTML select o radio.
+
+	La primera línea <?=set_select('role', 'user')?> verifica si el campo de 		formulario con el nombre "role" tiene el valor "user" en $_POST. Si es así, se 	agrega el atributo "selected" al elemento HTML correspondiente en el campo de 		formulario.
+
+	La segunda línea <?=set_select('role', 'admin')?> hace lo mismo, pero verifica 	si el campo de formulario "role" tiene el valor "admin" en $_POST. Si es así, 		se agrega el atributo "selected" al elemento HTML correspondiente en el campo 		de formulario.
+
+	En resumen, estas líneas de código se utilizan para preseleccionar una opción 		en un campo de formulario HTML select o radio, según los valores enviados a 		través de $_POST.
+
+27. Luego creamos la funcion (set_selected) en el archivo functions.php. para que en     el formulario la opcion elegida se quede seleccionada
+
+	function set_select($key, $value)
+    	{
+        if(!empty($_POST[$key]))
+        {
+            if ($_POST[$key] == $value) {
+                return " selected "
+            }
+            return $_POST[$key];
+        }
+
+        return '';
+    	}
+
+	Esta función de PHP llamada "set_select" toma dos parámetros: $key y $value. 		La función verifica si el valor de $_POST para la clave dada en $key no está 		vacío usando la función "empty".
+
+	Si el valor de $_POST[$key] no está vacío, la función comprueba si el valor es 	igual a $value. Si es así, se devuelve un espacio en blanco con el atributo 		"selected", lo que indica que la opción debe ser seleccionada en un campo de 		formulario HTML select o radio.
+
+	Si el valor de $_POST[$key] no está vacío pero no es igual a $value, se 		devuelve el valor de $_POST[$key], lo que indica que se seleccionó otra opción 	en el campo de formulario.
+
+	i el valor de $_POST[$key] está vacío, la función devuelve una cadena vacía.
+
+	En resumen, esta función se utiliza para preseleccionar una opción en un campo 	de formulario HTML select o radio, según los valores enviados a través de 		$_POST. Si el valor enviado a través de $_POST para la clave dada en $key es 		igual al valor $value, se devuelve un espacio en blanco con el atributo 		"selected", lo que indica que la opción debe ser seleccionada. De lo 			contrario, se devuelve el valor enviado a través de $_POST para la clave dada 		en $key o una cadena vacía si no se envió ningún valor.
+
+28. luego agregamo un con dicional(else if) al password en (users.php) para que las        contraseñas que se ingresen sean minimo de 8 caracteres.
+		
+	else
+        //validacion minimo caracteres contraseña
+        if(strlen($_POST['password']) < 8)
+        {
+            $errors['password'] = "las contraseñas deben tener 8 caracteres o más";
+        }
+
+29. ahora vamos a crear una alerta para cuando se esta creando el usuario de algo no       salio bien en(admin-header.php) 
+
+	<?php if(message()):?>
+	
+		<div class="alert"><?=message('',false)?></div>
+
+	<?php endif;?>
+
+	Este código de PHP comprueba si hay algún mensaje almacenado en la sesión PHP 	utilizando la función "message()" que se define en algún lugar del código. Si 	hay un mensaje almacenado, se muestra en la página HTML dentro de un elemento 	div con la clase "alert".
+
+	La función "message('', false)" se utiliza para obtener el mensaje almacenado 	en la sesión y luego limpiar el mensaje para que no se muestre en la siguiente 	solicitud. El primer parámetro vacío '' indica que no se debe proporcionar una 	clave específica para el mensaje y el segundo parámetro false indica que no se 	debe volver a mostrar el mensaje.
+
+	La estructura "if" con "endif" se utiliza para controlar cuándo se debe 	mostrar el mensaje almacenado. Si hay un mensaje, se muestra en la página 	HTML, de lo contrario, el código dentro del bloque "if" no se ejecuta.
+
+	En resumen, este código se utiliza para mostrar un mensaje almacenado en la 	sesión PHP en una página HTML utilizando la función "message()" y el elemento 	div con la clase "alert". Si no hay ningún mensaje almacenado, no se muestra 	nada en la página HTML.
+
+
+30. Mandamos el mensaje a la interfaz de usuario(users.php)
+	
+	//-----Alerta--------------
+    	message("testing one two");
+    	//-----Alerta--------------
+
+31. le damos estilo a la Alerta en (styles.css)
+	
+	/*MENSAJE ALERTA: AlGO NO SALIO BIEN*/
+	.alert {
+		background-color: #ffb193;
+		color: #730000;
+		padding: 10px 20px;
+	}
+
+32. Ahora vamos a guardar(insertar) algunos datos en (users.php)
+	-vamos a insertar datos a la tabla users
+
+	$values = [];
+            $values['username'] = trim($_POST['username']);
+            $values['email'] = trim($_POST['email']);
+            $values['role'] = trim($_POST['role']);
+            $values['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            /*Encriptamos la contraseña con la funcion password_hash*/
+            $values['date'] = date("Y-m-d H:i:s");
+
+            //vamos a insertar los campos a users
+            $query = "insert into users (username, email,password,role,date) values 			(:username,:email,:password,:role,:date)";
+            db_query($query,$values);
+
+            message("Usuario Creado Con Éxito");
+
+
+	Estas líneas de código de PHP crean un nuevo usuario en una base de datos 		utilizando los valores enviados a través de un formulario HTML.
+
+	Aquí está lo que está sucediendo paso a paso:
+
+	Se crea un array vacío llamado $values en el cual se almacenarán los valores 		que serán insertados en la tabla users.
+
+	Se asignan los valores enviados a través del formulario HTML a las claves 		correspondientes en el array $values. Por ejemplo, el valor enviado a través 		del campo username se asigna a $values['username'], el valor enviado a través 		del campo email se asigna a $values['email'], etc.
+
+	Se encripta la contraseña enviada a través del campo password utilizando la 		función password_hash y se almacena el resultado en $values['password']. Esto 		se 	hace para garantizar la seguridad de la contraseña almacenada en la 	base de 	datos.
+
+	Se asigna la fecha y hora actual a la clave date en $values.
+
+	Se crea una consulta SQL para insertar los valores en la tabla users. Los 		valores son sustituidos por marcadores de posición (:username, :email, etc.) 		para 	evitar posibles ataques de inyección SQL.
+
+	Se llama a una función db_query que ejecuta la consulta SQL y pasa los valores 	de $values para ser insertados en la tabla.
+
+	Se muestra un mensaje en pantalla indicando que el usuario se ha creado con 		éxito. Esto se hace a través de la función message.
+
+	En resumen, estas líneas de código de PHP crean un nuevo usuario en una base 		de datos a partir de los valores enviados a través de un formulario HTML y 		muestran un mensaje de confirmación al usuario.
+
+33. Llenamos el formulario de Añadir Nuevo y creamos el Administrador
+
+34. Ahora vamos a hacer una consulta en (user.php)
+
+	    <?php
+                $query = "select * from users order by id desc limit 20";
+                $rows = db_query($query)
+            ?>
+
+	Este código de PHP realiza una consulta a una base de datos MySQL para 	seleccionar los últimos 20 registros de la tabla "users", ordenados por el 	campo "id" en orden descendente.
+
+	Primero, se define una variable llamada $query, que contiene una cadena de 	consulta SQL. La consulta comienza con la cláusula "SELECT *" para seleccionar 	todas las columnas de la tabla "users", seguida de la cláusula "FROM users" 	para indicar que se debe buscar en la tabla "users". Luego, se agrega la 	cláusula "ORDER BY id DESC" para ordenar los resultados por el campo "id" en 	orden descendente, y se utiliza la cláusula "LIMIT 20" para limitar los 	resultados a los últimos 20 registros.
+
+	Después de definir la consulta, se utiliza la función db_query para ejecutarla 	y recuperar los resultados de la base de datos. El resultado se guarda en la 	variable $rows. La función db_query es una función genérica que permite 	ejecutar consultas en una base de datos y recuperar los resultados.
+
+	Es importante destacar que este código es solo un ejemplo y que es necesario 	establecer una conexión a la base de datos antes de ejecutar esta consulta. 	Además, el código también asume que se está utilizando una función llamada 	db_query que no está definida en el código proporcionado.
+
+35. Ahora se mostraran los resultados de la consulta a la base de datos en formato de 
+    tabla de HTML
+
+	<?php if (!empty($rows)):?>
+                    <?php foreach ($rows as $row):?>
+                        <tr>
+                            <td><?=$row['id']?></td>
+                            <td><?=$row['username']?></td>
+                            <td><?=$row['email']?></td>
+                            <td><?=$row['role']?></td>
+                            <td><?=$row['date']?></td>
+                            <td>
+                                <a href="">
+                                    <img class="bi" src="<?=ROOT?					>/assets/icons/pencil-square.svg" alt="">
+                                </a>
+                                <a href="">
+                                    <img class="bi" src="<?=ROOT?					>/assets/icons/trash3.svg" alt="">
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach;?>
+                <?php endif;?>
+
+
+	Primero, se comprueba si la variable $rows no está vacía utilizando la función 	empty(). Si $rows contiene resultados, se ejecutará el código dentro de la 	estructura if.
+
+	Dentro de la estructura if, se utiliza un bucle foreach para recorrer cada uno 	de los resultados de la consulta y mostrarlos en una fila de la tabla. Por 	cada resultado, se crea una fila HTML <tr> que contiene una celda <td> para 	cada campo que se quiere mostrar (en este caso, "id", "username", "email", 	"role" y "date"). Los valores de cada campo se muestran utilizando la sintaxis 	<?=$row['campo']?>, donde "campo" es el nombre del campo que se quiere 	mostrar.
+
+	Finalmente, se muestra un par de iconos de lápiz y papelera, cada uno de los 	cuales está en un enlace <a> que puede llevar a una página de edición o 	eliminación de los datos. Los iconos se muestran utilizando la etiqueta <img> 	y el atributo src, que especifica la ruta de la imagen.
+
+36. Creamos una funcion(functions.php) para hacer modificar la fecha 
+    y hacerla mas entendible.
+
+	
+    	function get_date($date)
+    	{
+        return date("jS M,Y", strtotime($date));
+    	}
+
+	La función get_date() en PHP toma una fecha en formato de cadena y devuelve la 	misma fecha en un formato diferente utilizando la función date().
+
+	La función date() en PHP formatea una fecha y hora según un formato 	especificado. La sintaxis básica es date(formato, timestamp), donde formato es 	una cadena que contiene los caracteres de formato para especificar cómo se 	debe formatear la fecha y timestamp es un valor entero que representa la fecha 	y hora que se va a formatear. En el caso de la función get_date(), el segundo 	parámetro timestamp se obtiene utilizando la función strtotime(), que 	convierte una fecha en formato de cadena en un timestamp.
+
+	En la función get_date(), el formato de fecha especificado es "jS M,Y", que 	produce una fecha en el formato "Día del mes en letras (ordinal) Mes en 	letras, Año". Por ejemplo, la fecha "2023-04-05" se mostraría como "5th Apr, 	2023".
+
+	Por lo tanto, esta función es útil cuando se necesita mostrar una fecha en un 	formato específico y no se desea escribir todo el código de formateo cada vez 	que se necesita mostrar una fecha en ese formato. Simplemente se llama a la 	función get_date() con la fecha a formatear como argumento, y la función 	devuelve la fecha formateada.
+
+	Antes: 	2023-04-05 20:09:03
+	Ahora: 	5th Apr,2023
+
+37. Ahora vamos a crear una funcion para saber cuando se esta logueando un usuario
+
+	function logged_in()
+    	{
+        if(!empty($_SESSION['USER']) && is_array($_SESSION['USER'])){
+            return true;
+        }
+
+        return false;
+    	}
+
+	Este código de PHP define una función llamada logged_in() que devuelve true si 	el usuario ha iniciado sesión y false si no lo ha hecho.
+
+	En particular, la función comprueba si la variable de sesión $_SESSION['USER'] 	no está vacía y es un array, lo que sugiere que se ha establecido una sesión 	para el usuario y se han almacenado algunos datos en la variable de sesión. Si 	la variable de sesión está establecida y es un array, la función devuelve 	true. Si la variable de sesión no está establecida o no es un array, la funció	n devuelve false.
+
+	En resumen, esta función se utiliza para comprobar si un usuario ha iniciado 		sesión en el sitio web o no.
+
+38. Ahora vamos a crear una funcion para saber cuando se esta logueando un     administrador.
+
+	function is_admin()
+    	{
+        if(!empty($_SESSION['USER']['role']) && $_SESSION['USER']['role'] == 'admin'){
+            return true;
+        }
+
+        return false;
+    	}
+
+	Esta función de PHP llamada is_admin() verifica si el usuario que ha iniciado 	sesión tiene un rol de "admin" en el sitio web.
+
+	La función comprueba si la variable de sesión $_SESSION['USER']['role'] no est	á vacía y si su valor es "admin". Si se cumple esta condición, la función 	devuelve true, lo que significa que el usuario tiene un rol de "admin". Si la 	condición no se cumple, la función devuelve false, lo que indica que el 	usuario no tiene un rol de "admin".
+
+	En resumen, esta función se utiliza para verificar si el usuario que ha 	iniciado sesión tiene permisos de administrador en el sitio web.
+
+39. Ahora vamos a hacer una funcion para agarrar cualquier usuario(obtener información    sobre el usuario que ha iniciado sesión en el sitio web)
+
+	function user($column)
+    	{
+        	if(!empty($_SESSION['USER'][$column])){
+            	return $_SESSION['USER'][$column];
+        	}
+    	}
+
+	Esta función de PHP llamada user($column) se utiliza para obtener información 	sobre el usuario que ha iniciado sesión en el sitio web.
+
+	La función acepta un parámetro $column, que es el nombre de la columna en la 	tabla de usuarios donde se encuentra la información que se desea obtener. La 	función comprueba si la variable de sesión $_SESSION['USER'][$column] no está 	vacía. Si esta variable de sesión tiene un valor, la función devuelve ese 	valor, que es la información del usuario correspondiente a la columna 	especificada.
+
+	Por lo tanto, esta función se utiliza para recuperar información específica 	del usuario que ha iniciado sesión en el sitio web. Por ejemplo, si se llama a 	user('username'), la función devolverá el nombre de usuario del usuario que ha 	iniciado sesión en el sitio web, siempre y cuando esté disponible en la 	variable de sesión $_SESSION['USER']. Si no se encuentra la información 	correspondiente, la función no devuelve nada.
+
+40. Sesion de Usuarios depues que se haya autenticado en el sitio web. para autenticar     a un usuario en el sitio web y establecer una sesión de usuario.
+
+
+	function authenticate($row)
+    	{
+        	$_SESSION['USER'] = $row;
+    	}
+
+	
+	Esta función de PHP llamada authenticate($row) se utiliza para autenticar a un 	usuario en el sitio web y establecer una sesión de usuario.
+
+	La función acepta un parámetro $row, que es un array que contiene información 	sobre el usuario autenticado, como su nombre de usuario, correo electrónico, 	ID de usuario, etc. La función establece la variable de sesión $_SESSION	['USER'] en el valor del array $row, lo que significa que se ha iniciado sesió	n para este usuario y se han almacenado sus datos en la variable de sesión.
+
+	Por lo tanto, esta función se utiliza para establecer una sesión de usuario 	después de que se haya autenticado en el sitio web. Después de llamar a esta 	función, se puede utilizar la variable de sesión $_SESSION['USER'] para 	acceder a la información del usuario y proporcionar una experiencia 	personalizada en el sitio web.
+
+41. Ahora vamos a comprobar si alguien es un administrador en (admin.php)
+
+	if(!is_admin())
+	{
+		message("Solo los administradores pueden acceder a la página de 		administración");
+		redirect('login'); 
+	}
+
+	Este código PHP comprueba si el usuario que ha iniciado sesión en el sitio web 	tiene permisos de administrador antes de permitir el acceso a una página de 	administración.
+
+	Primero, la condición !is_admin() verifica si el usuario no tiene permisos de 	administrador. Si esta condición se cumple, significa que el usuario no tiene 	permiso para acceder a la página de administración. En este caso, la función 	message() muestra un mensaje de error en la pantalla, indicando que solo los 	administradores pueden acceder a la página de administración. Luego, la funció	n redirect() redirige al usuario a la página de inicio de sesión, para que 	pueda iniciar sesión como administrador y volver a intentarlo.
+
+	En resumen, este código PHP se utiliza para restringir el acceso a la página 	de 	administración solo a los usuarios que tienen permisos de 	administrador. Si el usuario 	que intenta acceder a la página de 	administración no tiene permisos de 	administrador, 	se le redirige a la pá	gina de inicio de sesión.
+
+41. Mostramos mensaje en el login.php
+
+	<?php if(message()):?>
+		<div class="alert"><?=message('',true)?></div>
+	<?php endif;?>
+
+42. utiliza para cerrar la sesión de usuario y redirigir al usuario a la página de     inicio de sesión.
+
+
+	if(!empty($_SESSION['USER']))
+	{
+    		unset($_SESSION['USER']);
+    		session_destroy();
+    		session_regenerate_id();
+	}
+
+	redirect('login');
+
+
+	Este código de PHP se utiliza para cerrar la sesión de usuario y redirigir al 		usuario a la página de inicio de sesión.
+
+	Primero, la condición !empty($_SESSION['USER']) verifica si la variable de 		sesión $_SESSION['USER'] no está vacía, lo que significa que el usuario ha 		iniciado sesión. Si se cumple esta condición, se lleva a cabo el siguiente 		conjunto de instrucciones:
+
+	unset($_SESSION['USER']): elimina la variable de sesión $_SESSION['USER'] que 		contiene la información del usuario.
+	session_destroy(): destruye toda la información registrada en la sesión 		actual.
+	session_regenerate_id(): regenera el identificador de sesión para mejorar la 		eguridad de la sesión.
+	Después de cerrar la sesión de usuario, la función redirect() redirige al 		usuario a la página de inicio de sesión.
+
+	En resumen, este código se utiliza para cerrar la sesión de usuario y 		garantizar que no quede información de sesión de usuario residual. Luego, se 		redirige al usuario a la página de inicio de sesión, donde puede iniciar sesió		n nuevamente si es necesario.
+
+	--Ahora si presiono en cerrar sesion se cierra sesion 
+
+
+43. Ahora vamos a hacer que se pueda iniciar sesion en (login.php) como administrador 
+
+	- Ingresmos esta lineas de codigo
+
+	if($_SERVER['REQUEST_METHOD'] == 'POST')
+    	{
+        	//Agregamops una variable por si hay errores
+        	$errors = [];
+
+       		/* Ahora voy a encontrar una fila usando una consulta a base de Datos 		*/
+		$values = [];
+		$values['email'] = trim($_POST['email']);
+		$query = "select * from users where email = :email limit 1";
+		$row = db_query_one($query,$values);
+
+        	if(!empty($row))
+        
+        	{	
+			//vamos averificar la contraseña
+			if(password_verify($_POST['password'], $row['password']))
+			{	
+				authenticate($row);
+				message("Inicio de sesión Exitoso!");
+				redirect('admin');
+			}
+
+
+        	}
+        	        
+       		message("email o contraseña incorrectos");
+	   	//no queremos decirle al usuario cual es el incorrecto por motivos de 			seguridad
+    	}
+
+
+	Este código de PHP verifica si la solicitud HTTP recibida es una solicitud 	POST, y si lo es, busca en la base de datos un usuario con la dirección de 	correo electrónico especificada. Si encuentra un usuario, verifica si la 	contraseña ingresada por el usuario coincide con la contraseña almacenada en 	la base de datos utilizando la función password_verify(). Si las credenciales 	son válidas, el usuario se autentica y se le redirige a la página de 	administración. Si las credenciales no son válidas, se muestra un mensaje de 	error genérico, sin especificar si la dirección de correo electrónico o la 	contraseña son incorrectas, por motivos de seguridad.
+
+	Aquí hay una descripción línea por línea del código:
+
+	1. if($_SERVER['REQUEST_METHOD'] == 'POST') - Verifica si la solicitud HTTP 		recibida es una solicitud POST.
+
+	2. $errors = []; - Crea una matriz vacía para almacenar los errores.
+
+	3. $values['email'] = trim($_POST['email']); - Obtiene el valor del campo de 		correo electrónico enviado a través del formulario POST y lo almacena en la 		variable $values['email'].
+
+	4. $query = "select * from users where email = :email limit 1"; - Crea una 		consulta SQL para buscar un usuario en la tabla de usuarios que tenga la 		dirección de correo electrónico especificada.
+
+	5. $row = db_query_one($query,$values); - Ejecuta la consulta SQL utilizando 		la función db_query_one() y almacena el resultado en la variable $row.
+
+	6. if(!empty($row)) - Verifica si se encontró un usuario en la base de datos.
+
+	7. if(password_verify($_POST['password'], $row['password'])) - Verifica si la 		contraseña ingresada por el usuario coincide con la contraseña almacenada en 		la base de datos utilizando la función password_verify().
+
+	8. authenticate($row); - Autentica al usuario llamando a la función 		authenticate () con el resultado de la consulta de la base de datos como 		argumento.
+
+	9. message("Inicio de sesión Exitoso!"); - Muestra un mensaje de éxito.
+
+	10. redirect('admin'); - Redirige al usuario a la página de administración.
+
+	11. message("email o contraseña incorrectos"); - Muestra un mensaje de error 		genérico si las credenciales no son válidas.
+
+	12. //no queremos decirle al usuario cual es el incorrecto por motivos de 		seguridad - Comentario que indica que no se especifica qué credencial es 		incorrecta para evitar posibles ataques de fuerza bruta.
+
+44. Ahora quiero que se muestre mi nombre en Hola, usuario(admin-header) despues de     haber iniciado sesión.
+
+	- usamos la funcion que creamos para llamar el usuario llamada(user) que esta		(functions.php)
+	- hacemos eco de la columna que queremos en este caso el nombre('username')
+
+		<?=user('username')?>
+	
+	- Ahora tambien lo cambiamos en el sitio principal en (header.php) para que 	  tambien diga:
+		Hola, admin
+		(header.php)
+			<?=user('username')?>
+
+
+45. Ahora vamos a esconder el boton de login y crear tu cuenta porque no deberian        verse después de haber iniciado sesión en (footer.php)
+
+	<?php if(!logged_in()):?>
+		<li><a href="<?=ROOT?>/login">Inicia sesión</a></li>
+	<?php endif;?>
+
+	<?php if(!logged_in()):?>
+		<li><a href="<?=ROOT?>/register">Crea tu cuenta</a></li>
+	<?php endif;?>
+
+	Este código de PHP genera dos enlaces de navegación diferentes en función del 	estado de autenticación del usuario actual.
+
+	La función logged_in() verifica si el usuario actual ha iniciado sesión en el 	sitio web. Si el usuario no ha iniciado sesión, se muestran dos enlaces: uno 	para iniciar sesión y otro para registrarse en el sitio web.
+
+	Aquí hay una descripción línea por línea del código:
+
+	1. <?php if(!logged_in()):?> - Comienza un bloque de código condicional que se 	ejecutará solo si el usuario actual no ha iniciado sesión en el sitio web.
+
+	2. <li><a href="<?=ROOT?>/login">Inicia sesión</a></li> - Muestra un enlace            que dirige al usuario a la página de inicio de sesión del sitio web.
+
+	3.<?php endif;?> - Cierra el bloque de código condicional anterior.
+
+	4. <?php if(!logged_in()):?> - Comienza otro bloque de código condicional que          se ejecutará solo si el usuario actual no ha iniciado sesión en el sitio web.
+
+	5. <li><a href="<?=ROOT?>/register">Crea tu cuenta</a></li> - Muestra un 	        enlace que dirige al usuario a la página de registro del sitio web.
+
+	6. <?php endif;?> - Cierra el bloque de código condicional anterior.
+
+	En resumen, este código genera dos enlaces de navegación para que los usuarios 	inicien sesión o se registren en el sitio web, pero solo si el usuario actual 		no ha iniciado sesión previamente.
+
+	- Ahora no se ven los enlaces a login y crear cuenta
+
+
+46. Ahora vamos a hacer la secion de cuando se quiera editar un usuario(cuando se 
+	presione el icono de editar)
+
+	<?php  elseif($action == 'edit'):?>
+            <div style="max-width: 500px; margin: auto">
+                <form method="post">
+                    <h3>Editar Usario</h3>
+
+                    <input class="form-control my-1" value="<?=set_value('username')?			>" type="text" name="username" placeholder="Nombre usuario">
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'username' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['username'])):?>
+                        <small class="error"><?=$errors['username']?></small>
+                    <?php endif;?>
+
+                    <input class="form-control my-1" value="<?=set_value('email')?>" 			type="email" name="email" placeholder="Email">
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'username' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['email'])):?>
+                        <small class="error"><?=$errors['email']?></small>
+                    <?php endif;?>
+
+                    <select name="role" class="form-control my-1"> 
+                        <option value="">--Seleccionar rol--</option>
+                        <option <?=set_select('role','user')?> 			value="user">Usuario</option>
+                        <option <?=set_select('role','admin')?> 			value="admin">Administrador</option>
+                    </select>
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'role' no esta vacia ejecutara el if. 			en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['role'])):?>
+                        <small class="error"><?=$errors['role']?></small>
+                    <?php endif;?>
+
+                    <input class="form-control my-1" value="<?=set_value('password')?				>" type="password" name="password" 			placeholder="Contraseña">
+                    <!-- lo que estamos haciendo e condicional para verificar si la 			matriz $error de nombre 'password' no esta vacia ejecutara el 			if. en resumen este codigo mostrara un mensaje de error si los 			campos estan vacios o contienen algun error --> 
+                    <?php if(!empty($errors['password'])):?>
+                        <small class="error"><?=$errors['password']?></small>
+                    <?php endif;?>
+
+                    <input class="form-control my-1" value="<?=set_value			('retype_password')?>" type="password" name="retype_password" 			placeholder="Confirmar Contraseña">
+
+                    <button class="btn bg-green">Crear</button>
+                    <a href="<?=ROOT?>/admin/users">
+                        <button type="button" class="float-end btn">Atrás</button>
+                    </a>
+                </form>
+            </div>
+
+47. Ingresamos una variable en (users.php) en:
+
+	- set_value('username'),
+	- set_value('email'),
+	- <?=set_select('role','user')
+	- <?=set_select('role','admin')
+	
+	deberia quedar asi: 
+
+	set_value('username',$row['username'])
+	set_value('email',$row['email'])
+	- <?=set_select('role','user', $row['role])
+	- <?=set_select('role','admin', $row['role])
+
+	Estas líneas de código son funciones de CodeIgniter, un popular framework de 	PHP, que se utilizan para llenar valores de formulario en una página web.
+
+	La función set_value() se utiliza para establecer el valor de un campo de 	formulario en función de un valor anterior o predeterminado. La sintaxis de la 	función es set_value(nombre_campo, valor_predeterminado). En el código 	proporcionado, se establecen los valores de los campos de formulario 	'username' y 'email' en los valores correspondientes del arreglo $row, que se 	supone que contiene los datos del usuario.
+
+	La función set_select() se utiliza para seleccionar un elemento de una lista 	desplegable en un formulario. La sintaxis de la función es set_select	(nombre_campo, valor_opción, valor_predeterminado). En el código 	proporcionado, se establecen las opciones seleccionadas de una lista 	desplegable con nombre de campo 'role', en función del valor correspondiente 	de $row['role']. Si $row['role'] es igual a 'user', la opción 'user' estará 	seleccionada, y si $row['role'] es igual a 'admin', la opción 'admin' estará 	seleccionada.
+
+	Es importante tener en cuenta que las funciones set_value() y set_select() son 	específicas de CodeIgniter y no son funciones nativas de PHP. Estas funciones 	son útiles para simplificar el llenado de valores en formularios y reducir la 	cantidad de código necesario para manejar la lógica de formulario en una 	aplicación web.
+
+
+48. Agregamos variables a (set_select y set_value) (function.php) para que en el        formulario se muestre por defecto los valores que se tienen ingresados
+
+
+	function set_value($key, $default = '')
+    {
+        if(!empty($_POST[$key]))
+        {
+            return $_POST[$key];
+        } else {
+
+            return $default;
+
+        }
+
+        return '';
+    }
+
+	
+	function set_select($key, $value, $default = '')
+    {
+        if(!empty($_POST[$key]))
+        {
+            if ($_POST[$key] == $value) {
+                return " selected ";
+            }
+        } else {
+            if ($default == $value) {
+                return " selected ";
+            }
+        }
+
+        return '';
+    }
+
+49. Ahora actualizamos lo datos de la tabla de la base de datos a excepcion de la      contraseña si el usuario no ha ingresado una atraves del 
+    formulario.
+
+	if(empty($_POST['password'])) 
+                { 
+                    $query = "update users set email = :email, password = :password, 			username = :username, role = :role where id = :id limit 1";
+                    $values['password'] = password_hash($_POST['password'], 			PASSWORD_DEFAULT);
+                }
+
+50. Asi debe quedar el editar(edit) usuario
+
+51. Ahora creamos la sesión de categorias(categories.php)
+
+	- trabajamos con el mismo codigo del archivo users.php
+
+52. Nos vamos a admin y en el switch agregamos un case 'categories'
+
+	switch ($section) {
+		case 'dashboard':
+			require page('admin/dashboard');
+			break;
+			
+		case 'users':
+			require page('admin/users');
+			break;
+
+		case 'categories':
+				require page('admin/categories');
+				break;
+		
+		case 'artists':
+			require page('admin/artists');
+			break;
+
+		case 'music':
+			require page('admin/music');
+			break;
+
+		default:
+			require page('admin/404');
+			break;
+	}
+
+53. Codigo categories
+
+54. Ahora agregamos la accion despues de pulsa agregar 
+
+55. Hacemos la accion editar
+
+56. Hacemos la accion eliminar
+
+57. Agregamos un campo image a la artist en phpMyAdmin
+
+58. Reutilizamos codigo de categories.php
+
+59. Agregamos al formulario(<form>)
+
+	enctype="multipart/form-data"
+
+60. Agregamos input de carga de archivos
+
+
+
+if (!empty($_FILES['image']['name']))
+			{
+
+				$folder = "uploads/";
+				if (!file_exists($folder)) 
+				{
+					mkdir($folder,0777,true);
+					file_put_contents($folder."index.php", "");
+				}
+				show($_FILES['image']);
+				die;
+				move_uploaded_file($_FILES['image']['tmp_name'], $destination);
+
+			} else {
+				$errors['name'] = "se requiere una imagen";
+			}
+
+
+Array
+(
+    [name] => 01.jpg
+    [full_path] => 01.jpg
+    [type] => image/jpeg
+    [tmp_name] => C:\xamppp\tmp\phpDABC.tmp
+    [error] => 0
+    [size] => 95394
+)
+
+
+61. Añadimos la imagen para que se vea en la vista
+
+	<img src="<?=$row['image']?>"
+
+	- Agregamos la ruta
+
+	src="<?=ROOT?>/<?=$row['image']?>"
+	
+
+70.Creamos el archivo songs.php
+
+	reutilizamos el codigo de artists.php
+
+
+71. cambiamos los nombres en la consultas de artists por el nombre de la tabla de la 	base de datos por (songs)
+
+72. agregamos un select
